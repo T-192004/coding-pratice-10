@@ -83,7 +83,7 @@ app.post('/login/', async (request, response) => {
     isPasswordMatched = await bcrypt.compare(password, dbUser.password)
     if (isPasswordMatched) {
       const jwToken = await jwt.sign(username, 'MY_SECRET_TOKEN')
-      console.log(jwToken);
+      console.log(jwToken)
       response.send({jwToken})
     } else {
       response.status(400)
@@ -224,13 +224,13 @@ app.put(
   '/districts/:districtId/',
   authenticateToken,
   async (request, response) => {
-    const {distrcitName, stateId, cases, cured, active, deaths} = request.body
+    const {districtName, stateId, cases, cured, active, deaths} = request.body
     const {districtId} = request.params
     const putDistrictDetailsQuery = `
   UPDATE 
     district
   SET
-    district_name = '${distrcitName}',
+    district_name = '${districtName}',
     state_id = ${stateId},
     cases = ${cases},
     cured = ${cured},
