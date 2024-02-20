@@ -26,43 +26,6 @@ const initializeDBandServer = async () => {
 }
 initializeDBandServer()
 
-/////////////----------REGISTER USER API-----------------
-app.post('/register', async (request, response) => {
-  const {username, name, password, gender, location} = request.body
-  console.log(request.body)
-  const hashedPassword = await bcrypt.hash(password, 10)
-  let checkTheUserName = `
-    SELECT 
-        * 
-    FROM
-        user
-    WHERE username = '${username}';`
-  const userData = await db.get(checkTheUserName)
-  console.log(userData)
-  if (userData !== undefined) {
-    response.status(400)
-    response.send('User already exists')
-  } else {
-    if (password.length < 5) {
-      response.status(400)
-      response.send('Password is too short')
-    } else {
-      const postNewQuery = `
-        INSERT INTO 
-            user(username, name, password, gender, location)
-        VALUES ('${username}', 
-                '${name}', 
-                '${hashedPassword}',
-                '${gender}',
-                '${location}'
-                );
-        `
-      await db.run(postNewQuery)
-      response.status(200)
-      response.send('User created successfully')
-    }
-  }
-})
 ////////////---------------API 1 ----------------------
 app.post('/login/', async (request, response) => {
   const {username, password} = request.body
@@ -82,9 +45,9 @@ app.post('/login/', async (request, response) => {
   } else {
     isPasswordMatched = await bcrypt.compare(password, dbUser.password)
     if (isPasswordMatched) {
-      const jwToken = await jwt.sign(username, 'MY_SECRET_TOKEN')
-      console.log(jwToken)
-      response.send({jwToken})
+      const jwtToken = await jwt.sign(username, 'MY_SECRET_TOKEN')
+      console.log(jwtToken)
+      response.send({jwtToken})
     } else {
       response.status(400)
       response.send('Invalid password')
@@ -108,6 +71,9 @@ const authenticateToken = (request, response, next) => {
         response.status(401)
         response.send('Invalid JWT Token')
       } else {
+        console.log({jwtToken})
+        console.log({payload})
+        request.username = payload
         next()
       }
     })
@@ -140,6 +106,7 @@ app.get('/states/', authenticateToken, async (request, response) => {
 
 app.get('/states/:stateId/', authenticateToken, async (request, response) => {
   const {stateId} = request.params
+  console.log(request)
   const getAllStatesQuery = `
   SELECT 
     *
@@ -171,7 +138,7 @@ app.post('/districts/', authenticateToken, async (request, response) => {
 const getDistrictDetails = dbObj => {
   return {
     districtId: dbObj.district_id,
-    distrcitName: dbObj.district_name,
+    districtName: dbObj.district_name,
     stateId: dbObj.state_id,
     cases: dbObj.cases,
     cured: dbObj.cured,
@@ -187,6 +154,7 @@ app.get(
   authenticateToken,
   async (request, response) => {
     const {districtId} = request.params
+    console.log(districtId)
     const getDistrictQuery = `
   SELECT 
     *
